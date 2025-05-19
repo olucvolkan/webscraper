@@ -3,14 +3,11 @@ description:
 globs: 
 alwaysApply: false
 ---
-Harika! İşte Material Design kullanılarak oluşturulacak, basit ama estetik bir UI için güncellenmiş İngilizce prompt:
-
-⸻
-
-Prompt:
+---
+description:
 
 Design a simple, elegant, and responsive Web Scraper Dashboard UI using Material Design principles (e.g., Material UI / MUI for React).
-
+---
 Key Features:
 
 1. Main Table View (Default Screen):

@@ -1,0 +1,13 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: We wil use Backend for frontend design
+---
+
+1- We need mock api server.Generate simple api server and return dummy data.
+2- Proje should be run without backend service. We should be use frontend mock server in locally. 
+3- Update [README.md](mdc:README.md) for run mock api server.
+4- Create response structure and use same response structure always 

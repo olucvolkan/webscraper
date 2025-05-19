@@ -1,0 +1,58 @@
+{
+  "scrapes": [
+    {
+      "id": "04b2f7bb-a850-4bab-a8ed-6548e7a86f97",
+      "domain": "volkanoluc.com",
+      "url": "http://volkanoluc.com",
+      "duration": 603,
+      "timestamp": "2025-05-19T23:26:54.296Z",
+      "tagCount": 476,
+      "status": "done"
+    },
+    {
+      "id": "1",
+      "domain": "example.com",
+      "url": "https://example.com",
+      "duration": 350,
+      "timestamp": "2023-05-19T15:22:45.000Z",
+      "tagCount": 124,
+      "status": "done"
+    },
+    {
+      "id": "2",
+      "domain": "github.com",
+      "url": "https://github.com",
+      "duration": 820,
+      "timestamp": "2023-05-19T14:56:12.000Z",
+      "tagCount": 452,
+      "status": "done"
+    },
+    {
+      "id": "3",
+      "domain": "reactjs.org",
+      "url": "https://reactjs.org",
+      "duration": 650,
+      "timestamp": "2023-05-19T14:30:21.000Z",
+      "tagCount": 315,
+      "status": "done"
+    },
+    {
+      "id": "4",
+      "domain": "dev.to",
+      "url": "https://dev.to",
+      "duration": 720,
+      "timestamp": "2023-05-18T19:11:05.000Z",
+      "tagCount": 356,
+      "status": "done"
+    },
+    {
+      "id": "5",
+      "domain": "medium.com",
+      "url": "https://medium.com",
+      "duration": 950,
+      "timestamp": "2023-05-18T17:22:10.000Z",
+      "tagCount": 489,
+      "status": "done"
+    }
+  ]
+}
