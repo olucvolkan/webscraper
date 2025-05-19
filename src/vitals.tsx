@@ -1,14 +1,32 @@
+interface Metric {
+  id: string;
+  name: string;
+  value: number;
+}
+
+// Type definition for navigator.connection
+interface NetworkInformation {
+  effectiveType: string;
+  [key: string]: any;
+}
+
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformation;
+}
+
 const vitalsUrl = 'https://vitals.vercel-analytics.com/v1/vitals';
 
-function getConnectionSpeed() {
-  return 'connection' in navigator &&
-    navigator['connection'] &&
-    'effectiveType' in navigator['connection']
-    ? navigator['connection']['effectiveType']
+function getConnectionSpeed(): string {
+  const nav = navigator as NavigatorWithConnection;
+  
+  return 'connection' in nav && 
+    nav.connection && 
+    'effectiveType' in nav.connection
+    ? nav.connection.effectiveType
     : '';
 }
 
-export function sendToVercelAnalytics(metric) {
+export function sendToVercelAnalytics(metric: Metric): void {
   const analyticsId = process.env.REACT_APP_VERCEL_ANALYTICS_ID;
   if (!analyticsId) {
     return;
@@ -37,4 +55,4 @@ export function sendToVercelAnalytics(metric) {
       credentials: 'omit',
       keepalive: true,
     });
-}
+} 
