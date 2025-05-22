@@ -2,14 +2,15 @@ import axios from 'axios';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 // Types
-export interface ScrapeResult {
-  id: string;
-  domain: string;
+export interface Website {
+  id: number;
   url: string;
-  duration: number;
-  timestamp: string;
-  tagCount: number;
-  status: 'in_progress' | 'done' | 'failed';
+  domain: string;
+  status: 'waiting' | 'processing' | 'completed' | 'failed';
+  htmlTagCount: number | null;
+  requestDuration: number | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface DomainSummary {
@@ -17,54 +18,96 @@ export interface DomainSummary {
   totalTagCount: number;
 }
 
-// Response type for POST /scrape
-interface ScrapeResponse {
-  success: boolean;
-  id: string;
+// API Response Types
+interface ApiResponse<T> {
+  status: string;
   message: string;
+  data: T;
+}
+
+interface CrawlResponse {
+  id: number;
+  status: string;
 }
 
 const useWebScraper = () => {
-  const [scrapeResults, setScrapeResults] = useState<ScrapeResult[]>([]);
+  const [scrapeResults, setScrapeResults] = useState<Website[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [domainSummary, setDomainSummary] = useState<DomainSummary[]>([]);
   const hasInProgressRef = useRef<boolean>(false);
   const inProgressTimerRef = useRef<number | null>(null);
   
-  // Hardcoded for development until .env works
-  const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:8081';
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
+  
+  console.log('Environment:', {
+    REACT_APP_BACKEND_URL: process.env.REACT_APP_BACKEND_URL,
+    backendUrl
+  });
+
+  // Configure axios defaults
+  useEffect(() => {
+    axios.defaults.baseURL = backendUrl;
+    axios.defaults.timeout = 10000; // 10 seconds timeout
+    axios.defaults.headers.common['Content-Type'] = 'application/json';
+  }, [backendUrl]);
 
   const fetchScrapeResults = useCallback(async (): Promise<void> => {
     try {
       setError(null);
-      const response = await axios.get<ScrapeResult[]>(`${backendUrl}/scrapes`);
-      setScrapeResults(response.data);
+      console.log('Fetching results from:', `${backendUrl}/api/websites`);
       
-      // Check if there are any in-progress scrapes
-      const hasInProgress = response.data.some(result => result.status === 'in_progress');
-      hasInProgressRef.current = hasInProgress;
+      const response = await axios.get<ApiResponse<{ websites: Website[] }>>(`${backendUrl}/api/websites`);
+      console.log('API Response:', response.data);
       
-      // If there are in-progress scrapes, set a timer to check again
-      if (hasInProgress) {
-        startInProgressTimer();
-      } else if (inProgressTimerRef.current) {
-        // If there are no in-progress scrapes but we have a timer, clear it
-        clearInProgressTimer();
+      if (response.data.status === 'success') {
+        setScrapeResults(response.data.data.websites);
+        
+        const hasInProgress = response.data.data.websites.some(
+          result => result.status === 'waiting' || result.status === 'processing'
+        );
+        hasInProgressRef.current = hasInProgress;
+        
+        if (hasInProgress) {
+          startInProgressTimer();
+        } else if (inProgressTimerRef.current) {
+          clearInProgressTimer();
+        }
+      } else {
+        setError('Failed to fetch websites');
       }
-    } catch (err) {
-      console.error('Error fetching scrape results:', err);
-      setError('Failed to fetch scrape results');
-      throw err; // Re-throw to allow handling in the component
+    } catch (error: unknown) {
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        code: axios.isAxiosError(error) ? error.code : 'UNKNOWN',
+        response: axios.isAxiosError(error) ? error.response?.data : undefined,
+        config: axios.isAxiosError(error) ? {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers
+        } : undefined
+      });
+      
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNREFUSED') {
+          setError('Cannot connect to the server. Please check if the backend is running.');
+        } else if (error.response) {
+          setError(`Server error: ${error.response.status} - ${error.response.statusText}`);
+        } else if (error.request) {
+          setError('No response from server. Please check your internet connection.');
+        } else {
+          setError(`Request failed: ${error.message}`);
+        }
+      } else {
+        setError('An unexpected error occurred');
+      }
+      throw error;
     }
   }, [backendUrl]);
 
-  // Start a timer to periodically refresh while there are in-progress scrapes
   const startInProgressTimer = () => {
-    // Clear any existing timer
     clearInProgressTimer();
     
-    // Set a new timer to check every 3 seconds
     inProgressTimerRef.current = window.setInterval(() => {
       if (hasInProgressRef.current) {
         fetchScrapeResults();
@@ -74,7 +117,6 @@ const useWebScraper = () => {
     }, 3000);
   };
 
-  // Clear the in-progress timer
   const clearInProgressTimer = () => {
     if (inProgressTimerRef.current) {
       clearInterval(inProgressTimerRef.current);
@@ -87,47 +129,68 @@ const useWebScraper = () => {
     setError(null);
     
     try {
-      const response = await axios.post<ScrapeResponse>(`${backendUrl}/scrape`, { url });
+      console.log('Sending crawl request to:', `${backendUrl}/api/crawler/crawl`);
       
-      if (response.data.success) {
-        // Create a new scrape result with "in_progress" status
-        const newScrapeResult: ScrapeResult = {
-          id: response.data.id,
-          domain: new URL(url).hostname,
-          url: url,
-          duration: 0,
-          timestamp: new Date().toISOString(),
-          tagCount: 0,
-          status: 'in_progress'
-        };
-        
-        setScrapeResults(prev => [newScrapeResult, ...prev]);
-        
-        // Start checking for updates since we have an in-progress scrape
+      const response = await axios.get<ApiResponse<CrawlResponse>>(
+        `${backendUrl}/api/crawler/crawl`,
+        { 
+          params: { url },
+          headers: {
+            'Accept': 'application/json'
+          }
+        }
+      );
+      
+      console.log('Crawl Response:', response.data);
+      
+      if (response.data.status === 'success') {
         hasInProgressRef.current = true;
         startInProgressTimer();
-        
+        await fetchScrapeResults();
         return true;
       } else {
         setError('Failed to initiate scraping');
         return false;
       }
-    } catch (err) {
-      console.error('Error submitting URL for scraping:', err);
-      setError('Failed to submit URL for scraping');
+    } catch (error: unknown) {
+      console.error('Scrape Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        code: axios.isAxiosError(error) ? error.code : 'UNKNOWN',
+        response: axios.isAxiosError(error) ? error.response?.data : undefined,
+        config: axios.isAxiosError(error) ? {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers
+        } : undefined
+      });
+      
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNREFUSED') {
+          setError('Cannot connect to the server. Please check if the backend is running.');
+        } else if (error.response) {
+          setError(`Server error: ${error.response.status} - ${error.response.statusText}`);
+        } else if (error.request) {
+          setError('No response from server. Please check your internet connection.');
+        } else {
+          setError(`Request failed: ${error.message}`);
+        }
+      } else {
+        setError('An unexpected error occurred');
+      }
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Use useCallback to memoize the function
   const calculateDomainSummary = useCallback(() => {
     const domainMap = new Map<string, number>();
     
     scrapeResults.forEach(result => {
-      const currentCount = domainMap.get(result.domain) || 0;
-      domainMap.set(result.domain, currentCount + result.tagCount);
+      if (result.status === 'completed' && result.htmlTagCount !== null) {
+        const currentCount = domainMap.get(result.domain) || 0;
+        domainMap.set(result.domain, currentCount + result.htmlTagCount);
+      }
     });
     
     const summary: DomainSummary[] = Array.from(domainMap.entries()).map(([domain, totalTagCount]) => ({
@@ -138,16 +201,13 @@ const useWebScraper = () => {
     setDomainSummary(summary);
   }, [scrapeResults]);
 
-  // Calculate domain summary whenever scrape results change
   useEffect(() => {
     calculateDomainSummary();
   }, [calculateDomainSummary]);
 
-  // Fetch data only when the component mounts (page loads/refreshes)
   useEffect(() => {
     fetchScrapeResults();
     
-    // Event listener for visibility change to refresh data when tab becomes visible again
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         fetchScrapeResults();
@@ -162,13 +222,42 @@ const useWebScraper = () => {
     };
   }, [fetchScrapeResults]);
 
+  const fetchWebsiteById = async (id: number): Promise<Website | null> => {
+    try {
+      const response = await axios.get<ApiResponse<{ website: Website }>>(`${backendUrl}/api/websites/${id}`);
+      
+      if (response.data.status === 'success') {
+        return response.data.data.website;
+      } else {
+        setError('Failed to fetch website details');
+        return null;
+      }
+    } catch (error: unknown) {
+      console.error('Error fetching website details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        code: axios.isAxiosError(error) ? error.code : 'UNKNOWN',
+        response: axios.isAxiosError(error) ? error.response?.data : undefined
+      });
+      
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          setError(`Failed to fetch website details: ${error.response.status}`);
+        } else {
+          setError('Failed to fetch website details');
+        }
+      }
+      return null;
+    }
+  };
+
   return {
     scrapeResults,
     isLoading,
     error,
     domainSummary,
     fetchScrapeResults,
-    scrapeUrl
+    scrapeUrl,
+    fetchWebsiteById
   };
 };
 

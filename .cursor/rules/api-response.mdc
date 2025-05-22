@@ -1,0 +1,106 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description:
+I am giving api reqeuest and response. Read response and connect with api this project.
+---
+URL: {domain}/api/crawler/crawl
+Method: Get
+Request:
+{
+    "url": "https://volkanoluc.com"
+}
+Response: 
+{
+    "status": "success",
+    "message": "We are crawling website now.",
+    "data": {
+        "id": 7,
+        "status": "waiting"
+    }
+}
+
+
+Request: {domain}/api/websites
+Method: Get
+Response:
+{
+    "status": "success",
+    "message": "Websites retrieved successfully",
+    "data": {
+        "websites": [
+            {
+                "id": 1,
+                "url": "https://symfony.com",
+                "domain": "symfony.com",
+                "status": "processing",
+                "htmlTagCount": null,
+                "requestDuration": null,
+                "createdAt": "2025-05-22 00:29:10",
+                "updatedAt": "2025-05-22 00:29:11"
+            },
+            {
+                "id": 2,
+                "url": "https://volkanoluc.com",
+                "domain": "volkanoluc.com",
+                "status": "processing",
+                "htmlTagCount": null,
+                "requestDuration": null,
+                "createdAt": "2025-05-22 00:31:34",
+                "updatedAt": "2025-05-22 00:31:34"
+            },
+            {
+                "id": 3,
+                "url": "https://volkanoluc.com",
+                "domain": "volkanoluc.com",
+                "status": "processing",
+                "htmlTagCount": null,
+                "requestDuration": null,
+                "createdAt": "2025-05-22 00:47:39",
+                "updatedAt": "2025-05-22 00:47:40"
+            },
+            {
+                "id": 4,
+                "url": "https://volkanoluc.com",
+                "domain": "volkanoluc.com",
+                "status": "failed",
+                "htmlTagCount": null,
+                "requestDuration": null,
+                "createdAt": "2025-05-22 00:54:14",
+                "updatedAt": "2025-05-22 00:54:15"
+            },
+            {
+                "id": 5,
+                "url": "https://volkanoluc.com",
+                "domain": "volkanoluc.com",
+                "status": "completed",
+                "htmlTagCount": 209,
+                "requestDuration": 0.098,
+                "createdAt": "2025-05-22 00:57:34",
+                "updatedAt": "2025-05-22 00:57:35"
+            }
+        ]
+    }
+}
+
+- Request: api/websites/{id}
+- Response:
+{
+    "status": "success",
+    "message": "Website retrieved successfully",
+    "data": {
+        "website": {
+            "id": 5,
+            "url": "https://volkanoluc.com",
+            "domain": "volkanoluc.com",
+            "status": "completed",
+            "htmlTagCount": 209,
+            "requestDuration": 0.098,
+            "createdAt": "2025-05-22 00:57:34",
+            "updatedAt": "2025-05-22 00:57:35"
+        }
+    }
+}

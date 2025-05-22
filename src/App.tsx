@@ -13,6 +13,7 @@ import React, { useState } from 'react';
 // Custom components
 import AddUrlDialog from './components/AddUrlDialog';
 import DomainSummary from './components/DomainSummary';
+import ErrorDisplay from './components/ErrorDisplay';
 import FeedbackSnackbar from './components/FeedbackSnackbar';
 import ScrapeResultsTable from './components/ScrapeResultsTable';
 
@@ -115,6 +116,8 @@ const App: React.FC = () => {
           </Fab>
         </Box>
       </Box>
+
+      <ErrorDisplay error={error} />
 
       <Paper sx={{ width: '100%', mb: 2 }}>
         <Tabs value={tabValue} onChange={handleTabChange} aria-label="dashboard tabs">

@@ -1,5 +1,5 @@
 import {
-    Chip,
+    Box,
     CircularProgress,
     Paper,
     Table,
@@ -7,84 +7,84 @@ import {
     TableCell,
     TableContainer,
     TableHead,
-    TableRow
+    TableRow,
+    Typography
 } from '@mui/material';
 import React from 'react';
-import { ScrapeResult } from '../hooks/useWebScraper';
+import { Website } from '../hooks/useWebScraper';
 
 interface ScrapeResultsTableProps {
-  scrapeResults: ScrapeResult[];
+  scrapeResults: Website[];
 }
 
 const ScrapeResultsTable: React.FC<ScrapeResultsTableProps> = ({ scrapeResults }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'in_progress':
-        return 'warning';
-      case 'done':
-        return 'success';
+      case 'completed':
+        return 'success.main';
       case 'failed':
-        return 'error';
+        return 'error.main';
+      case 'processing':
+      case 'waiting':
+        return 'warning.main';
       default:
-        return 'default';
+        return 'text.primary';
     }
   };
 
-  const formatDuration = (ms: number) => {
-    if (ms === 0) return '-';
-    if (ms < 1000) return `${ms}ms`;
-    return `${(ms / 1000).toFixed(2)}s`;
-  };
-
-  const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString();
+  const formatDuration = (duration: number | null) => {
+    if (duration === null) return '-';
+    return `${duration.toFixed(3)}s`;
   };
 
   return (
     <TableContainer component={Paper}>
-      <Table sx={{ minWidth: 650 }} aria-label="scrape results table">
+      <Table>
         <TableHead>
           <TableRow>
-            <TableCell>Domain</TableCell>
             <TableCell>URL</TableCell>
+            <TableCell>Domain</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell align="right">HTML Tags</TableCell>
             <TableCell align="right">Duration</TableCell>
             <TableCell>Timestamp</TableCell>
-            <TableCell align="right">HTML Tag Count</TableCell>
-            <TableCell>Status</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {scrapeResults.length > 0 ? (
-            scrapeResults.map((row) => (
-              <TableRow
-                key={row.id}
-                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-              >
-                <TableCell component="th" scope="row">
-                  {row.domain}
-                </TableCell>
-                <TableCell sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {row.url}
-                </TableCell>
-                <TableCell align="right">{formatDuration(row.duration)}</TableCell>
-                <TableCell>{formatTime(row.timestamp)}</TableCell>
-                <TableCell align="right">{row.status === 'in_progress' ? '-' : row.tagCount}</TableCell>
+          {scrapeResults.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} align="center">
+                <Typography variant="body1" color="textSecondary">
+                  No scrape results yet. Add a URL to start scraping!
+                </Typography>
+              </TableCell>
+            </TableRow>
+          ) : (
+            scrapeResults.map((result) => (
+              <TableRow key={result.id}>
+                <TableCell>{result.url}</TableCell>
+                <TableCell>{result.domain}</TableCell>
                 <TableCell>
-                  <Chip 
-                    label={row.status} 
-                    color={getStatusColor(row.status) as "warning" | "success" | "error" | "default"} 
-                    sx={{ textTransform: 'capitalize' }}
-                    icon={row.status === 'in_progress' ? <CircularProgress size={16} color="inherit" /> : undefined}
-                  />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {(result.status === 'processing' || result.status === 'waiting') && (
+                      <CircularProgress size={16} />
+                    )}
+                    <Typography color={getStatusColor(result.status)}>
+                      {result.status.charAt(0).toUpperCase() + result.status.slice(1)}
+                    </Typography>
+                  </Box>
+                </TableCell>
+                <TableCell align="right">
+                  {result.htmlTagCount !== null ? result.htmlTagCount : '-'}
+                </TableCell>
+                <TableCell align="right">
+                  {formatDuration(result.requestDuration)}
+                </TableCell>
+                <TableCell>
+                  {new Date(result.createdAt).toLocaleString()}
                 </TableCell>
               </TableRow>
             ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={6} align="center">
-                No scrape results yet. Add a URL to start scraping.
-              </TableCell>
-            </TableRow>
           )}
         </TableBody>
       </Table>
