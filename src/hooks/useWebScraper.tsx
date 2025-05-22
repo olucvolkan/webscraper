@@ -131,17 +131,17 @@ const useWebScraper = () => {
     try {
       console.log('Sending crawl request to:', `${backendUrl}/api/crawler/crawl`);
       
-      const response = await axios.get<ApiResponse<CrawlResponse>>(
+      const response = await axios.post<ApiResponse<CrawlResponse>>(
         `${backendUrl}/api/crawler/crawl`,
-        { 
-          params: { url },
+        { url },
+        {
           headers: {
+            'Content-Type': 'application/json',
             'Accept': 'application/json'
           }
         }
       );
       
-      console.log('Crawl Response:', response.data);
       
       if (response.data.status === 'success') {
         hasInProgressRef.current = true;
