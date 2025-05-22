@@ -2,6 +2,13 @@
 
 A simple, elegant, and responsive Web Scraper Dashboard UI built with React and Material UI.
 
+![Web Scraper Dashboard](screenshot.png)
+
+## Live Demo
+
+Frontend: [https://webscraper-ui.vercel.app](https://webscraper-ui.vercel.app)  
+Backend API: [https://weathered-glitter-9529.fly.dev](https://weathered-glitter-9529.fly.dev)
+
 ## Features
 
 - **Main Table View**: Display a data table showing all previously crawled domains with details like domain name, URL, request duration, timestamp, HTML tag count, and status.
@@ -22,10 +29,12 @@ A simple, elegant, and responsive Web Scraper Dashboard UI built with React and 
 Create a `.env` file in the root directory with the following content:
 
 ```
+# For local development
 REACT_APP_BACKEND_URL=http://localhost:5000
-```
 
-This will connect to the local mock API server.
+# For production
+REACT_APP_BACKEND_URL=https://weathered-glitter-9529.fly.dev
+```
 
 ### Installation
 
@@ -47,75 +56,7 @@ npm run mock-api
 The frontend application will be available at [http://localhost:3000](http://localhost:3000).
 The mock API server will be available at [http://localhost:5000](http://localhost:5000).
 
-## Mock API Server
+## API Endpoints
 
-This project includes a mock API server that provides fake data for development purposes. The mock server is built using json-server and provides the following endpoints:
+The application uses the following API endpoints (replace {domain} with either http://localhost:5000 for local development or https://weathered-glitter-9529.fly.dev for production)
 
-- `GET /scrapes` - Returns a list of all scraped URLs
-- `GET /scrapes/:id` - Returns details for a specific scrape
-- `POST /scrape` - Accepts a URL in the request body and simulates starting a scrape job
-
-### Mock API Response Structure
-
-#### GET /scrapes
-
-```json
-[
-  {
-    "id": "1",
-    "domain": "example.com",
-    "url": "https://example.com",
-    "duration": 350,
-    "timestamp": "2023-05-19T15:22:45.000Z",
-    "tagCount": 124,
-    "status": "done"
-  },
-  ...
-]
-```
-
-#### POST /scrape
-
-Request:
-```json
-{
-  "url": "https://example.com"
-}
-```
-
-Response:
-```json
-{
-  "success": true,
-  "id": "unique-id",
-  "message": "URL scraping has been initiated"
-}
-```
-
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the React app in development mode. Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-### `npm run mock-api`
-
-Runs the mock API server at [http://localhost:5000](http://localhost:5000).
-
-### `npm run dev`
-
-Runs both the React app and the mock API server concurrently.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.
-
-## License
-
-MIT
